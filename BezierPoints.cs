@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -54,22 +54,9 @@ public class BezierPoints : MonoBehaviour
     public bool autoLerp = false;
     public bool looping = true;
     public bool lerpBackwards = false;
-
-    [SerializeField]
-    private float totalArea = 0;//in terms of per second.
     
-    public void setAutoLerp(bool autoLerp)
-    {
-        this.autoLerp = autoLerp;
-    }
-    public void setLerpBackwards(bool lerpBackwards)
-    {
-        this.lerpBackwards = lerpBackwards;
-    }
-    public void setLooping(bool looping)
-    {
-        this.looping = looping;
-    }
+    //Total area under animation curves
+    private float totalArea = 0;
 
     void Update()
     {
@@ -95,6 +82,7 @@ public class BezierPoints : MonoBehaviour
             {
                 if (lerpValue >= 1 || lerpValue <= 0)
                 {
+                    lerpValue = Mathf.Clamp01(lerpValue);
                     lerpBackwards = !lerpBackwards;
                 }
             }
@@ -102,18 +90,18 @@ public class BezierPoints : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// Get rotation evaluated at testLerpValue.
     /// </summary>
-    /// <param name="lerpValuePosition"></param>
+    /// <param name="testLerpValue"></param>
     /// <returns></returns>
-    public Quaternion getRotation(float lerpValuePosition)
+    public Quaternion getRotation(float testLerpValue)
     {
         Quaternion rotation = Quaternion.identity;
 
         //if length isnt 0 and endpoints isnt null
         if (curves.Count > 0)
         {
-            lerpValuePosition = Mathf.Clamp(lerpValuePosition, 0, 0.999f);
+            testLerpValue = Mathf.Clamp(testLerpValue, 0, 1);
 
             //determine total allocated lerp time
             float totalTimeBlockSize = 0;
@@ -128,9 +116,9 @@ public class BezierPoints : MonoBehaviour
             for (offset = 0; offset < CurvesCount; offset++)
             {
                 timeBlockStartValue += (1 / curves[offset].speedCurveAverage);
-                if ((lerpValuePosition * totalTimeBlockSize) <= timeBlockStartValue)
+                if ((testLerpValue * totalTimeBlockSize) <= timeBlockStartValue)
                 {
-                    lerp = ((lerpValuePosition * totalTimeBlockSize) - (timeBlockStartValue - (1 / curves[offset].speedCurveAverage))) / (1 / curves[offset].speedCurveAverage);
+                    lerp = ((testLerpValue * totalTimeBlockSize) - (timeBlockStartValue - (1 / curves[offset].speedCurveAverage))) / (1 / curves[offset].speedCurveAverage);
                     break;
                 }
             }
@@ -144,14 +132,20 @@ public class BezierPoints : MonoBehaviour
         }
         return rotation;
     }
-    public Vector3 getPosition(float lerpValuePosition)
+
+    /// <summary>
+    /// Get position evaluated at testLerpValue.
+    /// </summary>
+    /// <param name="testLerpValue"></param>
+    /// <returns></returns>
+    public Vector3 getPosition(float testLerpValue)
     {
         Vector3 position = Vector3.zero;
 
         //if length isnt 0 and endpoints isnt null
         if (curves.Count > 0)
         {
-            lerpValuePosition = Mathf.Clamp(lerpValuePosition, 0, 0.999f);
+            testLerpValue = Mathf.Clamp(testLerpValue, 0, 0.999f);
 
             //determine total allocated lerp time
             float totalTimeBlockSize = 0;
@@ -166,10 +160,10 @@ public class BezierPoints : MonoBehaviour
             for (offset = 0; offset < CurvesCount; offset++)
             {
                 timeBlockStartValue += (1f / curves[offset].speedCurveAverage);
-                //if is correct animation curve for the bezier current
-                if ((lerpValuePosition * totalTimeBlockSize) <= timeBlockStartValue)
+                //if is correct animation curve to determine area for
+                if ((testLerpValue * totalTimeBlockSize) <= timeBlockStartValue)
                 {
-                    float lerp = ((lerpValuePosition * totalTimeBlockSize) - (timeBlockStartValue - (1f / curves[offset].speedCurveAverage))) / (1f / curves[offset].speedCurveAverage);
+                    float lerp = ((testLerpValue * totalTimeBlockSize) - (timeBlockStartValue - (1f / curves[offset].speedCurveAverage))) / (1f / curves[offset].speedCurveAverage);
                     
                     lerpValue = BezierCurveUtilities.calculateCubicBezierArea(0, lerp, curves[offset].speedCurvePoints) / curves[offset].totalCurveArea;//determine percentage of area under curve on the left of lerp value in animation curve
                     break;
@@ -190,10 +184,13 @@ public class BezierPoints : MonoBehaviour
         return position;
     }
 
+
+    //******************** functions to modify the path ***********************
+
     public void addBeizeCurve(Vector3 endPoint1, Vector3 endPoint2, Vector3 controlPoint1, Vector3 controlPoint2)
     {
         curves.Add(new CurvePoints(new Vector3[] { endPoint1, endPoint2 }, new Vector3[] { controlPoint1, controlPoint2 }));
-        
+
         totalArea += 1;
 
         setAnimationCurve(curves.Count - 1, new AnimationCurve(new Keyframe[] { new Keyframe(0, 1), new Keyframe(1, 1) }));
@@ -201,7 +198,7 @@ public class BezierPoints : MonoBehaviour
     public void addBeizeCurve()
     {
         Vector3 endPoint1;
-        Vector3 endPoint2 ;
+        Vector3 endPoint2;
         Vector3 controlPoint1;
         Vector3 controlPoint2;
 
@@ -219,7 +216,7 @@ public class BezierPoints : MonoBehaviour
             controlPoint1 = transform.position + new Vector3(0, 0, 1);
             controlPoint2 = transform.position + new Vector3(1, 0, 1);
         }
-        
+
         addBeizeCurve(endPoint1, endPoint2, controlPoint1, controlPoint2);
     }
 
@@ -228,8 +225,6 @@ public class BezierPoints : MonoBehaviour
         curves.Clear();
         totalArea = 0;
     }
-
-    //******************** get and set functions ***********************
 
     public bool setAnimationCurve(int ofCurve, AnimationCurve curve)
     {
@@ -253,6 +248,7 @@ public class BezierPoints : MonoBehaviour
         }
         return false;
     }
+
     public bool setCurveMultiplier(int ofCurve, float multiplier)
     {
         if (isWithinArrayCheck(ofCurve))
