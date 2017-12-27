@@ -12,9 +12,9 @@ A simple and easy to use bezier pathing tool for the Unity game engine. Interpol
 - lerpValue - Can be modified so the object would at at a certain point along the path
 
 #### Examples
-![Alt Text](http://web.uvic.ca/~andrewyung/images/extra/bezier1.gif)
-![Alt Text](http://web.uvic.ca/~andrewyung/images/extra/bezier2.gif)
-![Alt Text](http://web.uvic.ca/~andrewyung/images/extra/bezier4.gif)
+<img src="/SampleGifs/bezier1.gif?raw=true">
+<img src="/SampleGifs/bezier2.gif?raw=true">
+<img src="/SampleGifs/bezier3.gif?raw=true">
 
 
 #### Improvements?
