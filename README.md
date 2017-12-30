@@ -4,6 +4,7 @@ A simple and easy to use bezier pathing tool for the Unity game engine. Interpol
 ### Instructions
 - Drag BezierPoints script onto gameobject you want to have pathing for
 - Setup path using the inspector and/or handles in editor
+Note: Animation curves for speed only supports 2 (beginning and end) keyframe points
 
 #### Movement can be controlled through the Unity inspector or code with:
 - autoLerp - Automatically move the gameobject along the path (stops at the end if lerpBackwards is not set)
